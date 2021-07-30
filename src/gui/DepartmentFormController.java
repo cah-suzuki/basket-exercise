@@ -1,9 +1,12 @@
 package gui;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import db.DbException;
+import gui.listeners.DataChangeListener;
 import gui.util.Alerts;
 import gui.util.Constraints;
 import gui.util.Utils;
@@ -21,6 +24,8 @@ public class DepartmentFormController implements Initializable {
 	private Department entity;
 	
 	private DepartmentService service;
+	//permite obj se inscreverem na lista e receberem evento (LISTCONTROLLER = LISTENER)
+	private List<DataChangeListener> dataChangeListeners = new ArrayList<>();
 	
 	@FXML
 	private TextField txtId;
@@ -40,6 +45,10 @@ public class DepartmentFormController implements Initializable {
 	public void setDepartmentService(DepartmentService service) {
 		this.service = service;
 	}
+	//inscrição na lista de change listener ,outros obj implementando essa interface podem receber evento da classe
+	public void subscribeDataChangeListener(DataChangeListener listener) {
+		dataChangeListeners.add(listener);
+	}
 	
 	@FXML
 	public void onBtSaveAction(ActionEvent event) {
@@ -52,6 +61,8 @@ public class DepartmentFormController implements Initializable {
 		try {
 			entity = getFormData();
 			service.saveOrUpdate(entity);
+			//notificar listeners que salvamento aconteceu com sucesso
+			notifyDataChangeListeners();
 			//FECHAR JANELA
 			Utils.currentStage(event).close();
 		} catch (DbException e) {
@@ -60,6 +71,13 @@ public class DepartmentFormController implements Initializable {
 		
 		
 	}
+	private void notifyDataChangeListeners() {
+		for (DataChangeListener listener: dataChangeListeners) {
+			listener.onDataChanged();
+		}
+		
+	}
+
 	//pega os dados do form e instancia
 	private Department getFormData() {
 	   Department obj = new Department();
